@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#07131f" />
+  <meta name="description" content="تطبيق وموقع تفاعلي (PWA) عن الإعجاز العلمي في القرآن الكريم: الآيات، التفسير، دلالات الإعجاز، شهادات العلماء، المراجع والأبحاث، وقنوات علمية." />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="الإعجاز العلمي" />
+  <title>الإعجاز العلمي في القرآن الكريم</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="./icon-192.svg" />
+  <link rel="apple-touch-icon" href="./icon-192.svg" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <a class="skip-link" href="#view">تخطّي إلى المحتوى</a>
+  <canvas id="starfield" class="starfield" aria-hidden="true"></canvas>
+
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="42" height="42" role="img" aria-label="شعار">
+          <defs>
+            <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#ffe9ad"/><stop offset="1" stop-color="#d4a72c"/>
+            </linearGradient>
+          </defs>
+          <circle cx="32" cy="26" r="15" fill="none" stroke="url(#lg)" stroke-width="2.4"/>
+          <ellipse cx="32" cy="26" rx="15" ry="6" fill="none" stroke="url(#lg)" stroke-width="1.6" opacity=".85"/>
+          <ellipse cx="32" cy="26" rx="6" ry="15" fill="none" stroke="url(#lg)" stroke-width="1.6" opacity=".85"/>
+          <circle cx="32" cy="26" r="3" fill="url(#lg)"/>
+          <path d="M20 46 q12 -7 24 0" fill="none" stroke="url(#lg)" stroke-width="1.6" opacity=".7"/>
+          <path d="M20 52 q12 -6 24 0" fill="none" stroke="url(#lg)" stroke-width="1.6" opacity=".45"/>
+        </svg>
+      </span>
+      <div class="brand-text">
+        <h1>الإعجاز العلمي في القرآن الكريم</h1>
+        <p class="brand-sub">موسوعة تفاعلية · آيات · تفسير · شهادات · مراجع · أبحاث</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="themeBtn" class="theme-toggle" type="button" title="تبديل الوضع الليلي/النهاري" aria-label="تبديل المظهر" aria-pressed="false">
+        <span class="tt-icon tt-sun">☀️</span>
+        <span class="tt-track"><span class="tt-thumb"></span></span>
+        <span class="tt-icon tt-moon">🌙</span>
+      </button>
+      <button id="installBtn" class="icon-btn install" title="تثبيت التطبيق على الجهاز" aria-label="تثبيت التطبيق">
+        <span class="ib-ico">⤓</span><span class="ib-label">تثبيت</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="search-wrap">
+    <div class="search-box" role="search">
+      <span class="search-ico" aria-hidden="true">🔍</span>
+      <input id="search" type="search" placeholder="ابحث عن آية، مجال، عالم، أو كلمة مفتاحية…" autocomplete="off" aria-label="بحث" />
+      <button id="clearSearch" class="clear-btn" aria-label="مسح البحث" hidden>✕</button>
+    </div>
+  </div>
+
+  <nav id="tabs" class="tabs" aria-label="التنقل الرئيسي"></nav>
+
+  <main id="view" class="view" tabindex="-1"></main>
+
+  <footer class="app-footer">
+    <p class="credit">هندسة وإخراج: حاج إسماعيل ب · دعاؤكم الخالص نور لنا ولوالدي 🌟</p>
+    <p>محتوى تعليمي مفتوح مبني على أدبيات الإعجاز العلمي والمراجع الأكاديمية. النص القرآني قطعي الثبوت، والتفسير العلمي اجتهادي قابل للمراجعة.</p>
+    <p class="muted">يعمل التطبيق دون اتصال · <span id="netState">متصل</span></p>
+  </footer>
+
+  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" hidden>
+    <div class="modal-backdrop" data-close></div>
+    <div class="modal-panel" role="document">
+      <button class="modal-close" data-close aria-label="إغلاق">✕</button>
+      <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="./data.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>

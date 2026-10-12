@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="35%" r="80%">
+      <stop offset="0%" stop-color="#17415f"/>
+      <stop offset="100%" stop-color="#081521"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#ffe6a0"/>
+      <stop offset="100%" stop-color="#d4a72c"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="42" fill="url(#bg)"/>
+  <g fill="none" stroke="url(#gold)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M40 118 q56 -26 112 0" opacity="0.55"/>
+    <path d="M40 128 q56 -22 112 0" opacity="0.4"/>
+  </g>
+  <circle cx="96" cy="72" r="34" fill="none" stroke="url(#gold)" stroke-width="5"/>
+  <ellipse cx="96" cy="72" rx="34" ry="13" fill="none" stroke="url(#gold)" stroke-width="3" opacity="0.85"/>
+  <ellipse cx="96" cy="72" rx="13" ry="34" fill="none" stroke="url(#gold)" stroke-width="3" opacity="0.85"/>
+  <circle cx="96" cy="72" r="6" fill="url(#gold)"/>
+  <path d="M66 118 h60 l-6 22 a10 10 0 0 1 -10 8 h-28 a10 10 0 0 1 -10 -8 z" fill="url(#gold)" opacity="0.95"/>
+  <path d="M96 118 v28" stroke="#081521" stroke-width="3"/>
+  <path d="M78 150 h36" stroke="url(#gold)" stroke-width="4" stroke-linecap="round"/>
+</svg>
