@@ -9,11 +9,13 @@
 
   const LS_FAV = 'qsm_favorites_v1';
   const LS_THEME = 'qsm_theme_v1';
+  const LS_AUDIO = 'qsm_audio_v1';
 
   const state = {
     tab: 'home',
     search: '',
     category: 'all',
+    termCat: 'all',
     scholarKind: 'all',
     favorites: new Set(loadJSON(LS_FAV, [])),
     quiz: { order: [], index: 0, score: 0, answered: false }
@@ -72,6 +74,7 @@
     { id: 'miracies', label: '📖 آيات الإعجاز' },
     { id: 'categories', label: '🗂️ المجالات' },
     { id: 'similar', label: '🕸️ المتشابهات' },
+    { id: 'terms', label: '📚 فهرس المصطلحات' },
     { id: 'scholars', label: '👨‍🔬 العلماء والمستشرقون' },
     { id: 'advances', label: '🚀 التطورات العلمية' },
     { id: 'timeline', label: '🕰️ الجدول الزمني' },
@@ -119,6 +122,7 @@
       case 'miracies': return viewMiracles(view);
       case 'categories': return viewCategories(view);
       case 'similar': return viewSimilar(view);
+      case 'terms': return viewTerms(view);
       case 'scholars': return viewScholars(view);
       case 'advances': return viewAdvances(view);
       case 'timeline': return viewTimeline(view);
@@ -277,7 +281,36 @@
     view.appendChild(grid);
   }
 
-  /* ---- Scholars ---- */
+  /* ---- فهرس المصطلحات القرآنية ---- */
+  function viewTerms(view) {
+    view.appendChild(el('h3', { class: 'section-title' }, 'فهرس المصطلحات القرآنية وتفسيرها'));
+    view.appendChild(el('p', { class: 'section-desc' }, 'ملخص لمعاني مصطلحات قرآنية شائعة، مع مرجع من الآيات لفهم سياقها.'));
+    const filters = el('div', { class: 'filters' });
+    filters.appendChild(el('button', { class: 'chip' + (state.termCat === 'all' ? ' active' : ''), onclick: () => { state.termCat = 'all'; renderView(); } }, `الكل (${TERMS.length})`));
+    TERM_CATEGORIES.forEach((c) => {
+      const cnt = TERMS.filter((t) => t.cat === c.id).length;
+      filters.appendChild(el('button', { class: 'chip' + (state.termCat === c.id ? ' active' : ''), onclick: () => { state.termCat = c.id; renderView(); } }, `${c.icon} ${c.name} (${cnt})`));
+    });
+    view.appendChild(filters);
+    const filtered = TERMS.filter((t) => state.termCat === 'all' || t.cat === state.termCat);
+    const grid = el('div', { class: 'terms-grid' });
+    filtered.forEach((t) => {
+      const cat = TERM_CATEGORIES.find((x) => x.id === t.cat) || { name: '', icon: '' };
+      const card = el('article', { class: 'term-card' });
+      card.innerHTML = `
+        <div class="term-head">
+          <span class="term-ico">${cat.icon}</span>
+          <h4 class="term-title">${esc(t.term)}</h4>
+          <span class="term-cat">${esc(cat.name)}</span>
+        </div>
+        <p class="term-mean">${esc(t.meaning)}</p>
+        ${t.ref ? `<p class="term-ref">${esc(t.ref)}</p>` : ''}`;
+      grid.appendChild(card);
+    });
+    view.appendChild(grid);
+  }
+
+  /* ---- Scientists ---- */
   function viewScholars(view) {
     view.appendChild(el('h3', { class: 'section-title' }, 'العلماء والمستشرقون المهتمون بالإعجاز'));
     view.appendChild(el('p', { class: 'section-desc' }, 'علماء مسلمون، وعلماء غربيون، ومستشرقون، ومن أسلموا بسبب الإعجاز. اضغط للتفاصيل.'));
@@ -847,7 +880,7 @@
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault(); deferredPrompt = e;
     });
-    installBtn.addEventListener('click', showInstallHelp);
+    if (installBtn) installBtn.addEventListener('click', showInstallHelp);
     window.addEventListener('appinstalled', () => { toast('تم تثبيت التطبيق 🎉'); });
   }
   function initNetState() {
@@ -895,6 +928,79 @@
   }
 
   /* ------------------------------ Init ------------------------------ */
+  let audioCtx = null;
+  let ambientNodes = [];
+  let audioEnabled = loadJSON(LS_AUDIO, false);
+  function stopAmbient() {
+    audioEnabled = false;
+    saveJSON(LS_AUDIO, false);
+    const btn = $('#audioBtn');
+    if (btn) { btn.classList.remove('on'); btn.setAttribute('aria-pressed', 'false'); btn.innerHTML = '<span class="ib-ico" aria-hidden="true">🔊</span>'; }
+    ambientNodes.forEach((n) => { try { n.stop(); } catch (e) {} });
+    ambientNodes = [];
+    if (audioCtx && audioCtx.state !== 'closed') {
+      try { audioCtx.close(); } catch (e) {}
+    }
+    audioCtx = null;
+  }
+  function startAmbient() {
+    if (audioEnabled && audioCtx && audioCtx.state === 'running') return;
+    try {
+      const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      audioCtx = ctx;
+      if (ctx.state === 'suspended' && ctx.resume) ctx.resume();
+      if (ambientNodes.length) { audioEnabled = true; saveJSON(LS_AUDIO, true); return; }
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0, ctx.currentTime);
+      gain.connect(ctx.destination);
+      const osc1 = ctx.createOscillator();
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(40, ctx.currentTime);
+      osc1.connect(gain);
+      const osc2 = ctx.createOscillator();
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(60, ctx.currentTime);
+      osc2.connect(gain);
+      const lfo = ctx.createOscillator();
+      lfo.type = 'sine';
+      lfo.frequency.setValueAtTime(0.25, ctx.currentTime);
+      const lfoGain = ctx.createGain();
+      lfoGain.gain.setValueAtTime(0.12, ctx.currentTime);
+      lfo.connect(lfoGain).connect(gain.gain);
+      gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 1.5);
+      osc1.start();
+      osc2.start();
+      lfo.start();
+      ambientNodes = [osc1, osc2, lfo, gain, lfoGain];
+      audioEnabled = true;
+      saveJSON(LS_AUDIO, true);
+      const btn = $('#audioBtn');
+      if (btn) { btn.classList.add('on'); btn.setAttribute('aria-pressed', 'true'); btn.innerHTML = '<span class="ib-ico" aria-hidden="true">🔇</span>'; }
+    } catch (e) {
+      console.warn('Ambient audio not supported', e);
+    }
+  }
+  function toggleAmbient() {
+    if (audioEnabled && ambientNodes.length) stopAmbient();
+    else startAmbient();
+  }
+  function initAmbient() {
+    const btn = $('#audioBtn');
+    if (!btn) return;
+    if (audioEnabled) {
+      btn.classList.add('on');
+      btn.setAttribute('aria-pressed', 'true');
+      btn.innerHTML = '<span class="ib-ico" aria-hidden="true">🔇</span>';
+      try { startAmbient(); } catch (e) {}
+    }
+    btn.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); toggleAmbient(); });
+    // استئناف الصوت المفضّل عند أول تفاعل من المستخدم (تتطلّبه المتصفحات)
+    const unlock = () => {
+      if (audioEnabled && !ambientNodes.length) { try { startAmbient(); } catch (e) {} }
+    };
+    ['touchstart', 'mousedown', 'keydown'].forEach((ev) => document.addEventListener(ev, unlock, { once: true, passive: true }));
+  }
+
   function init() {
     initTheme();
     $('#themeBtn').addEventListener('click', () => {
@@ -909,6 +1015,7 @@
     initSearch();
     initPWA();
     initNetState();
+    initAmbient();
     initRouter();
   }
 

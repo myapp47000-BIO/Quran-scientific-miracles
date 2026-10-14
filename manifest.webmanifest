@@ -63,6 +63,12 @@
       "description": "آيات تجمعها دلالة واحدة"
     },
     {
+      "name": "فهرس المصطلحات",
+      "short_name": "المصطلحات",
+      "url": "./index.html#terms",
+      "description": "معاني المصطلحات القرآنية"
+    },
+    {
       "name": "المسابقات الثقافية",
       "short_name": "المسابقات",
       "url": "./index.html#quiz",
