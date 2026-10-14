@@ -16,6 +16,7 @@
     search: '',
     category: 'all',
     termCat: 'all',
+    termSearch: '',
     scholarKind: 'all',
     favorites: new Set(loadJSON(LS_FAV, [])),
     quiz: { order: [], index: 0, score: 0, answered: false }
@@ -97,8 +98,58 @@
     state.tab = id;
     if (location.hash.slice(1) !== id) history.replaceState(null, '', '#' + id);
     renderTabs();
+    renderSideMenu();
     renderView();
     $('#view').focus({ preventScroll: true });
+  }
+
+  /* ------------------------------ القائمة الجانبية ------------------------------ */
+  function renderSideMenu() {
+    const nav = $('#sideNav');
+    if (!nav) return;
+    nav.innerHTML = '';
+    TABS.forEach((t) => {
+      nav.appendChild(el('button', {
+        class: 'side-item' + (state.tab === t.id ? ' active' : ''),
+        type: 'button',
+        onclick: () => { setTab(t.id); closeSideMenu(); }
+      }, t.label));
+    });
+  }
+  function openSideMenu() {
+    const menu = $('#sideMenu');
+    const btn = $('#menuBtn');
+    if (!menu) return;
+    renderSideMenu();
+    menu.hidden = false;
+    requestAnimationFrame(() => menu.classList.add('open'));
+    if (btn) btn.setAttribute('aria-expanded', 'true');
+    document.body.classList.add('menu-open');
+  }
+  function closeSideMenu() {
+    const menu = $('#sideMenu');
+    const btn = $('#menuBtn');
+    if (!menu) return;
+    menu.classList.remove('open');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+    document.body.classList.remove('menu-open');
+    setTimeout(() => { menu.hidden = true; }, 220);
+  }
+  function initSideMenu() {
+    const btn = $('#menuBtn');
+    const menu = $('#sideMenu');
+    if (!btn || !menu) return;
+    btn.addEventListener('click', () => {
+      if (menu.hidden || !menu.classList.contains('open')) openSideMenu();
+      else closeSideMenu();
+    });
+    menu.querySelector('[data-menu-close]').addEventListener('click', closeSideMenu);
+    const closeBtn = $('#menuClose');
+    if (closeBtn) closeBtn.addEventListener('click', closeSideMenu);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !menu.hidden) closeSideMenu();
+    });
+    renderSideMenu();
   }
 
   /* ------------------------------ Router ------------------------------ */
@@ -284,7 +335,15 @@
   /* ---- فهرس المصطلحات القرآنية ---- */
   function viewTerms(view) {
     view.appendChild(el('h3', { class: 'section-title' }, 'فهرس المصطلحات القرآنية وتفسيرها'));
-    view.appendChild(el('p', { class: 'section-desc' }, 'ملخص لمعاني مصطلحات قرآنية شائعة، مع مرجع من الآيات لفهم سياقها.'));
+    view.appendChild(el('p', { class: 'section-desc' }, 'معانٍ موجزة لمصطلحات قرآنية شائعة مع تفسير مفصّل ومرجع من الآيات. اضغط «التفسير المفصّل» لعرض الشرح.'));
+
+    const searchBox = el('div', { class: 'term-search' });
+    const inp = el('input', { type: 'search', placeholder: 'ابحث في المصطلحات…', 'aria-label': 'بحث في المصطلحات', value: state.termSearch });
+    const clearBtn = el('button', { class: 'clear-btn', 'aria-label': 'مسح البحث', hidden: !state.termSearch }, '✕');
+    searchBox.appendChild(inp);
+    searchBox.appendChild(clearBtn);
+    view.appendChild(searchBox);
+
     const filters = el('div', { class: 'filters' });
     filters.appendChild(el('button', { class: 'chip' + (state.termCat === 'all' ? ' active' : ''), onclick: () => { state.termCat = 'all'; renderView(); } }, `الكل (${TERMS.length})`));
     TERM_CATEGORIES.forEach((c) => {
@@ -292,11 +351,21 @@
       filters.appendChild(el('button', { class: 'chip' + (state.termCat === c.id ? ' active' : ''), onclick: () => { state.termCat = c.id; renderView(); } }, `${c.icon} ${c.name} (${cnt})`));
     });
     view.appendChild(filters);
+
+    const count = el('div', { class: 'result-count' }, '');
+    view.appendChild(count);
+
     const filtered = TERMS.filter((t) => state.termCat === 'all' || t.cat === state.termCat);
     const grid = el('div', { class: 'terms-grid' });
-    filtered.forEach((t) => {
+
+    function norm(s) { return (s || '').toLowerCase(); }
+
+    const cards = filtered.map((t) => {
       const cat = TERM_CATEGORIES.find((x) => x.id === t.cat) || { name: '', icon: '' };
+      const detail = TERM_DETAILS[t.term] || '';
       const card = el('article', { class: 'term-card' });
+      const hay = norm([t.term, t.meaning, t.ref, detail, cat.name].join(' '));
+      card.dataset.search = hay;
       card.innerHTML = `
         <div class="term-head">
           <span class="term-ico">${cat.icon}</span>
@@ -304,10 +373,44 @@
           <span class="term-cat">${esc(cat.name)}</span>
         </div>
         <p class="term-mean">${esc(t.meaning)}</p>
-        ${t.ref ? `<p class="term-ref">${esc(t.ref)}</p>` : ''}`;
+        ${t.ref ? `<p class="term-ref">${esc(t.ref)}</p>` : ''}
+        ${detail ? `<button class="term-more" type="button" aria-expanded="false">التفسير المفصّل <span class="term-more-ico">▾</span></button>
+        <div class="term-detail" hidden><p>${esc(detail)}</p></div>` : ''}`;
       grid.appendChild(card);
+      return card;
     });
     view.appendChild(grid);
+
+    function applyFilter() {
+      const q = norm(state.termSearch).trim();
+      let shown = 0;
+      cards.forEach((c) => {
+        const ok = !q || c.dataset.search.includes(q);
+        c.hidden = !ok;
+        if (ok) shown++;
+      });
+      count.textContent = `النتائج: ${shown} مصطلح`;
+    }
+    applyFilter();
+
+    inp.addEventListener('input', () => {
+      state.termSearch = inp.value;
+      clearBtn.hidden = !inp.value;
+      applyFilter();
+    });
+    clearBtn.addEventListener('click', () => {
+      inp.value = ''; state.termSearch = ''; clearBtn.hidden = true; applyFilter(); inp.focus();
+    });
+
+    grid.addEventListener('click', (e) => {
+      const btn = e.target.closest('.term-more');
+      if (!btn) return;
+      const box = btn.nextElementSibling;
+      const open = box.hidden;
+      box.hidden = !open;
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      btn.classList.toggle('open', open);
+    });
   }
 
   /* ---- Scientists ---- */
@@ -1016,6 +1119,7 @@
     initPWA();
     initNetState();
     initAmbient();
+    initSideMenu();
     initRouter();
   }
 

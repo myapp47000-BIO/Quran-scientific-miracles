@@ -41,6 +41,9 @@
       </div>
     </div>
     <div class="header-actions">
+      <button id="menuBtn" class="icon-btn menu-btn" type="button" title="القائمة" aria-label="فتح القائمة" aria-expanded="false" aria-controls="sideMenu">
+        <span class="ib-ico" aria-hidden="true">☰</span>
+      </button>
       <button id="audioBtn" class="icon-btn audio" type="button" title="الإيقاع الهادئ" aria-label="تشغيل/كتم الإيقاع الهادئ" aria-pressed="false">
         <span class="ib-ico" aria-hidden="true">🔊</span>
       </button>
@@ -64,6 +67,18 @@
   </div>
 
   <nav id="tabs" class="tabs" aria-label="التنقل الرئيسي"></nav>
+
+  <div id="sideMenu" class="side-menu" hidden>
+    <div class="side-menu__backdrop" data-menu-close></div>
+    <aside class="side-menu__panel" role="dialog" aria-modal="true" aria-label="قائمة الأقسام">
+      <div class="side-menu__head">
+        <span class="side-menu__title">☰ قائمة الأقسام</span>
+        <button id="menuClose" class="modal-close" type="button" aria-label="إغلاق القائمة">✕</button>
+      </div>
+      <nav id="sideNav" class="side-menu__nav" aria-label="أقسام التطبيق"></nav>
+      <p class="side-menu__foot">الأقسام كاملة في متناولك — اختر قسمًا للانتقال إليه.</p>
+    </aside>
+  </div>
 
   <main id="view" class="view" tabindex="-1"></main>
 
