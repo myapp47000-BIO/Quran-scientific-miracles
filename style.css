@@ -665,6 +665,42 @@ html[dir="rtl"] .side-menu__panel { transform: translateX(-100%); inset-inline-e
   backdrop-filter: blur(10px);
 }
 
+/* ------------------------------ Splash / شاشة الدخول ------------------------------ */
+.splash {
+  position: fixed; inset: 0; z-index: 200; display: grid; place-items: center;
+  background: #0d1d2f url("./splash.jpg") center / cover no-repeat;
+  transition: opacity .55s ease, visibility .55s ease; opacity: 1;
+}
+.splash::before {
+  content: ""; position: absolute; inset: 0;
+  background: radial-gradient(120% 90% at 50% 30%, rgba(13, 29, 47, .18), rgba(5, 13, 23, .88) 78%);
+}
+.splash-inner { position: relative; z-index: 1; text-align: center; padding: 28px; max-width: 90vw; }
+.splash-logo {
+  width: 120px; height: 120px; border-radius: 28px; object-fit: cover;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, .55), 0 0 0 1px rgba(229, 189, 78, .38);
+  animation: splashPop .6s cubic-bezier(.2, .9, .3, 1.2) both;
+}
+.splash-title {
+  margin: 18px 0 0; font-size: clamp(22px, 5.2vw, 34px); line-height: 1.5; font-weight: 800;
+  background: linear-gradient(180deg, var(--gold-1), var(--gold-2));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 2px 14px rgba(0, 0, 0, .4));
+}
+.splash-title span { font-size: .6em; -webkit-text-fill-color: #dbe7f2; color: #dbe7f2; }
+.splash-bar {
+  display: inline-block; width: 132px; height: 4px; margin-top: 22px; border-radius: 999px;
+  overflow: hidden; background: rgba(255, 255, 255, .16); position: relative;
+}
+.splash-bar::after {
+  content: ""; position: absolute; top: 0; bottom: 0; width: 40%; left: -40%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold-1), var(--gold-2));
+  animation: splashLoad 1.15s ease-in-out infinite;
+}
+.splash.hide { opacity: 0; visibility: hidden; pointer-events: none; }
+@keyframes splashPop { from { opacity: 0; transform: translateY(10px) scale(.92); } to { opacity: 1; transform: none; } }
+@keyframes splashLoad { 0% { left: -40%; } 100% { left: 100%; } }
+
 /* ------------------------------ Motion prefs / Print ------------------------------ */
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }

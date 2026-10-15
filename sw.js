@@ -1,6 +1,6 @@
 /* Service Worker — الإعجاز العلمي في القرآن الكريم
    استراتيجية: precache للأصول الأساسية + cache-first مع تحديث في الخلفية */
-const CACHE = 'quran-miracles-v13';
+const CACHE = 'quran-miracles-v14';
 const ASSETS = [
   './',
   './index.html',
@@ -8,13 +8,12 @@ const ASSETS = [
   './data.js',
   './app.js',
   './tilawah.mp3',
+  './splash.jpg',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
   './icon-maskable.png',
-  './icon-192.svg',
-  './icon-512.svg',
-  './icon-maskable.svg'
+  './apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {

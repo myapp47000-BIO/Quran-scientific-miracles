@@ -1035,6 +1035,23 @@
     canvas._stop = () => { if (raf) cancelAnimationFrame(raf); };
   }
 
+  /* ------------------------------ Splash ------------------------------ */
+  function initSplash() {
+    const sp = $('#splash');
+    if (!sp) return;
+    let done = false;
+    const hide = () => {
+      if (done) return;
+      done = true;
+      sp.classList.add('hide');
+      window.setTimeout(() => { if (sp.parentNode) sp.parentNode.removeChild(sp); }, 700);
+    };
+    window.setTimeout(hide, 1700);
+    window.addEventListener('load', () => window.setTimeout(hide, 400));
+    ['pointerdown', 'touchstart', 'keydown'].forEach((ev) =>
+      window.addEventListener(ev, hide, { once: true, passive: true }));
+  }
+
   /* ------------------------------ Init ------------------------------ */
   let tilawahEl = null;
   const savedAudio = loadJSON(LS_AUDIO, null);
@@ -1127,6 +1144,7 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !$('#modal').hidden) hideModal(); });
 
     initStarfield();
+    initSplash();
     initSearch();
     initPWA();
     initNetState();

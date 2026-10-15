@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#07131f" />
+  <meta name="theme-color" content="#0d1d2f" />
   <meta name="description" content="تطبيق وموقع تفاعلي (PWA) عن الإعجاز العلمي في القرآن الكريم: الآيات، التفسير، دلالات الإعجاز، شهادات العلماء، المراجع والأبحاث، وقنوات علمية." />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -11,11 +11,19 @@
   <title>الإعجاز العلمي في القرآن الكريم</title>
   <link rel="manifest" href="./manifest.webmanifest" />
   <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png" />
-  <link rel="icon" type="image/svg+xml" href="./icon-192.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png" />
   <link rel="apple-touch-icon" sizes="192x192" href="./icon-192.png" />
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
+  <div id="splash" class="splash" role="status" aria-label="جارٍ فتح التطبيق">
+    <div class="splash-inner">
+      <img class="splash-logo" src="./icon-512.png" alt="" width="120" height="120" />
+      <h1 class="splash-title">الإعجاز العلمي<br /><span>في القرآن الكريم</span></h1>
+      <span class="splash-bar" aria-hidden="true"></span>
+    </div>
+  </div>
   <a class="skip-link" href="#view">تخطّي إلى المحتوى</a>
   <canvas id="starfield" class="starfield" aria-hidden="true"></canvas>
 
