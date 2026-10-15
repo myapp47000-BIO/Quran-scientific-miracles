@@ -952,10 +952,15 @@
 
     // QR كود: نص URL في رمز عبر مكتبة خارجية؟ نستخدم وحدة بسيطة بديلة: عرض الرابط.
     const qrImg = $('#installQrImg', body);
+    const qrBox = $('.qr-box', body);
     if (qrImg) {
-      const url = 'http://127.0.0.1:8765/index.html';
-      qrImg.onerror = () => { const box = $('.qr-box', body); if (box) box.style.display = 'none'; };
-      qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(url);
+      if (location.protocol === 'file:') {
+        if (box) box.style.display = 'none';
+      } else {
+        const url = location.href.split('#')[0];
+        qrImg.onerror = () => { const box = $('.qr-box', body); if (box) box.style.display = 'none'; };
+        qrImg.src = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' + encodeURIComponent(url);
+      }
     }
 
     $('#tryInstallBtn', body).onclick = async () => {
@@ -1032,7 +1037,11 @@
 
   /* ------------------------------ Init ------------------------------ */
   let tilawahEl = null;
-  let audioEnabled = loadJSON(LS_AUDIO, false);
+  const savedAudio = loadJSON(LS_AUDIO, null);
+  let audioEnabled = savedAudio !== false; // التلاوة مفعّلة افتراضيًا (تشغيل تلقائي عند أول تفاعل) وإن أوقفها المستخدم صراحةً تبقى موقوفة
+  const AUDIO_EVENTS = ['pointerdown', 'touchstart', 'mousedown', 'click', 'keydown', 'scroll', 'wheel'];
+  let unlockBound = false;
+
   function audioSetUI(on) {
     const btn = $('#audioBtn');
     if (!btn) return;
@@ -1047,7 +1056,6 @@
       tilawahEl = document.createElement('audio');
       tilawahEl.id = 'tilawah';
       tilawahEl.src = './tilawah.mp3';
-      tilawahEl.loop = true;
       tilawahEl.preload = 'none';
       document.body.appendChild(tilawahEl);
     }
@@ -1055,15 +1063,34 @@
     tilawahEl.volume = 0.6;
     return tilawahEl;
   }
+  function removeUnlock() {
+    if (!unlockBound) return;
+    AUDIO_EVENTS.forEach((ev) => document.removeEventListener(ev, unlockHandler));
+    document.removeEventListener('visibilitychange', unlockHandler);
+    unlockBound = false;
+  }
+  function unlockHandler(e) {
+    // لا تتعارض مع زر الصوت نفسه (زر الصوت يعالج التشغيل/الإيقاف بنفسه)
+    if (e && e.target && e.target.closest && e.target.closest('#audioBtn')) { removeUnlock(); return; }
+    playTilawah();
+  }
+  function bindUnlock() {
+    if (unlockBound || !audioEnabled) return;
+    AUDIO_EVENTS.forEach((ev) => document.addEventListener(ev, unlockHandler, { passive: true }));
+    document.addEventListener('visibilitychange', unlockHandler);
+    unlockBound = true;
+  }
   function playTilawah() {
+    if (!audioEnabled) return;
     const el = getTilawah();
     const p = el.play();
-    if (p && p.catch) p.catch((e) => { console.warn('تعذّر تشغيل التلاوة', e); });
+    if (p && p.then) p.then(() => removeUnlock()).catch(() => {});
   }
   function stopAmbient() {
     audioEnabled = false;
     saveJSON(LS_AUDIO, false);
     audioSetUI(false);
+    removeUnlock();
     if (tilawahEl) { try { tilawahEl.pause(); } catch (e) {} }
   }
   function startAmbient() {
@@ -1080,18 +1107,11 @@
   function initAmbient() {
     const btn = $('#audioBtn');
     if (!btn) return;
-    const el = getTilawah();
+    getTilawah();
+    audioSetUI(audioEnabled);
     if (audioEnabled) {
-      audioSetUI(true);
-      playTilawah();
-      // استئناف عند أول تفاعل من المستخدم (تتطلّبه المتصفحات) عدا زر الصوت نفسه
-      const unlock = (e) => {
-        if (e && e.target && e.target.closest && e.target.closest('#audioBtn')) return;
-        if (audioEnabled && getTilawah().paused) playTilawah();
-      };
-      ['touchstart', 'mousedown', 'keydown'].forEach((ev) => document.addEventListener(ev, unlock, { once: true, passive: true }));
-    } else {
-      audioSetUI(false);
+      playTilawah();   // محاولة تلقائية فورية (قد يمنعها المتصفح)
+      bindUnlock();    // ثم تبدأ تلقائيًا عند أول تفاعل/تمرير من المستخدم
     }
     btn.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); toggleAmbient(); });
   }
