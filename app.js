@@ -1070,25 +1070,28 @@
     audioEnabled = true;
     saveJSON(LS_AUDIO, true);
     audioSetUI(true);
-    getTilawah();
     playTilawah();
   }
   function toggleAmbient() {
-    if (audioEnabled) stopAmbient();
-    else startAmbient();
+    const el = getTilawah();
+    if (el.paused) startAmbient();
+    else stopAmbient();
   }
   function initAmbient() {
     const btn = $('#audioBtn');
     if (!btn) return;
-    getTilawah();
+    const el = getTilawah();
     if (audioEnabled) {
       audioSetUI(true);
-      try { const p = getTilawah().play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
-      // استئناف التلاوة المفضّلة عند أول تفاعل من المستخدم (تتطلّبه المتصفحات)
-      const unlock = () => {
-        if (audioEnabled) { const p = getTilawah().play(); if (p && p.catch) p.catch(() => {}); }
+      playTilawah();
+      // استئناف عند أول تفاعل من المستخدم (تتطلّبه المتصفحات) عدا زر الصوت نفسه
+      const unlock = (e) => {
+        if (e && e.target && e.target.closest && e.target.closest('#audioBtn')) return;
+        if (audioEnabled && getTilawah().paused) playTilawah();
       };
       ['touchstart', 'mousedown', 'keydown'].forEach((ev) => document.addEventListener(ev, unlock, { once: true, passive: true }));
+    } else {
+      audioSetUI(false);
     }
     btn.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); toggleAmbient(); });
   }
