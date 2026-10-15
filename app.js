@@ -1031,77 +1031,66 @@
   }
 
   /* ------------------------------ Init ------------------------------ */
-  let audioCtx = null;
-  let ambientNodes = [];
+  let tilawahEl = null;
   let audioEnabled = loadJSON(LS_AUDIO, false);
+  function audioSetUI(on) {
+    const btn = $('#audioBtn');
+    if (!btn) return;
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.innerHTML = '<span class="ib-ico" aria-hidden="true">' + (on ? '🔇' : '🔊') + '</span>';
+  }
+  function getTilawah() {
+    if (tilawahEl) return tilawahEl;
+    tilawahEl = $('#tilawah');
+    if (!tilawahEl) {
+      tilawahEl = document.createElement('audio');
+      tilawahEl.id = 'tilawah';
+      tilawahEl.src = './tilawah.mp3';
+      tilawahEl.loop = true;
+      tilawahEl.preload = 'none';
+      document.body.appendChild(tilawahEl);
+    }
+    tilawahEl.loop = true;
+    tilawahEl.volume = 0.6;
+    return tilawahEl;
+  }
+  function playTilawah() {
+    const el = getTilawah();
+    const p = el.play();
+    if (p && p.catch) p.catch((e) => { console.warn('تعذّر تشغيل التلاوة', e); });
+  }
   function stopAmbient() {
     audioEnabled = false;
     saveJSON(LS_AUDIO, false);
-    const btn = $('#audioBtn');
-    if (btn) { btn.classList.remove('on'); btn.setAttribute('aria-pressed', 'false'); btn.innerHTML = '<span class="ib-ico" aria-hidden="true">🔊</span>'; }
-    ambientNodes.forEach((n) => { try { n.stop(); } catch (e) {} });
-    ambientNodes = [];
-    if (audioCtx && audioCtx.state !== 'closed') {
-      try { audioCtx.close(); } catch (e) {}
-    }
-    audioCtx = null;
+    audioSetUI(false);
+    if (tilawahEl) { try { tilawahEl.pause(); } catch (e) {} }
   }
   function startAmbient() {
-    if (audioEnabled && audioCtx && audioCtx.state === 'running') return;
-    try {
-      const ctx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      audioCtx = ctx;
-      if (ctx.state === 'suspended' && ctx.resume) ctx.resume();
-      if (ambientNodes.length) { audioEnabled = true; saveJSON(LS_AUDIO, true); return; }
-      const gain = ctx.createGain();
-      gain.gain.setValueAtTime(0, ctx.currentTime);
-      gain.connect(ctx.destination);
-      const osc1 = ctx.createOscillator();
-      osc1.type = 'sine';
-      osc1.frequency.setValueAtTime(40, ctx.currentTime);
-      osc1.connect(gain);
-      const osc2 = ctx.createOscillator();
-      osc2.type = 'sine';
-      osc2.frequency.setValueAtTime(60, ctx.currentTime);
-      osc2.connect(gain);
-      const lfo = ctx.createOscillator();
-      lfo.type = 'sine';
-      lfo.frequency.setValueAtTime(0.25, ctx.currentTime);
-      const lfoGain = ctx.createGain();
-      lfoGain.gain.setValueAtTime(0.12, ctx.currentTime);
-      lfo.connect(lfoGain).connect(gain.gain);
-      gain.gain.linearRampToValueAtTime(0.08, ctx.currentTime + 1.5);
-      osc1.start();
-      osc2.start();
-      lfo.start();
-      ambientNodes = [osc1, osc2, lfo, gain, lfoGain];
-      audioEnabled = true;
-      saveJSON(LS_AUDIO, true);
-      const btn = $('#audioBtn');
-      if (btn) { btn.classList.add('on'); btn.setAttribute('aria-pressed', 'true'); btn.innerHTML = '<span class="ib-ico" aria-hidden="true">🔇</span>'; }
-    } catch (e) {
-      console.warn('Ambient audio not supported', e);
-    }
+    audioEnabled = true;
+    saveJSON(LS_AUDIO, true);
+    audioSetUI(true);
+    getTilawah();
+    playTilawah();
   }
   function toggleAmbient() {
-    if (audioEnabled && ambientNodes.length) stopAmbient();
+    if (audioEnabled) stopAmbient();
     else startAmbient();
   }
   function initAmbient() {
     const btn = $('#audioBtn');
     if (!btn) return;
+    getTilawah();
     if (audioEnabled) {
-      btn.classList.add('on');
-      btn.setAttribute('aria-pressed', 'true');
-      btn.innerHTML = '<span class="ib-ico" aria-hidden="true">🔇</span>';
-      try { startAmbient(); } catch (e) {}
+      audioSetUI(true);
+      try { const p = getTilawah().play(); if (p && p.catch) p.catch(() => {}); } catch (e) {}
+      // استئناف التلاوة المفضّلة عند أول تفاعل من المستخدم (تتطلّبه المتصفحات)
+      const unlock = () => {
+        if (audioEnabled) { const p = getTilawah().play(); if (p && p.catch) p.catch(() => {}); }
+      };
+      ['touchstart', 'mousedown', 'keydown'].forEach((ev) => document.addEventListener(ev, unlock, { once: true, passive: true }));
     }
     btn.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); toggleAmbient(); });
-    // استئناف الصوت المفضّل عند أول تفاعل من المستخدم (تتطلّبه المتصفحات)
-    const unlock = () => {
-      if (audioEnabled && !ambientNodes.length) { try { startAmbient(); } catch (e) {} }
-    };
-    ['touchstart', 'mousedown', 'keydown'].forEach((ev) => document.addEventListener(ev, unlock, { once: true, passive: true }));
   }
 
   function init() {

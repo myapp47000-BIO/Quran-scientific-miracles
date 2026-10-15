@@ -54,10 +54,13 @@ html[data-theme="light"] {
   --text: #10202e;
   --text-dim: #3c556b;
   --text-faint: #6b8296;
+  --teal: #2c5f8a;
+  --emerald: #4b7a3a;
+  --emerald-soft: rgba(75, 122, 58, .28);
   --shadow: 0 16px 40px rgba(16, 32, 46, .16);
   --shadow-soft: 0 8px 22px rgba(16, 32, 46, .1);
   --glow-gold: 0 0 20px rgba(184, 137, 31, .22);
-  --glow-teal: 0 0 20px rgba(31, 138, 214, .2);
+  --glow-teal: 0 0 20px rgba(44, 95, 138, .2);
   --pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cg fill='none' stroke='%23b8891f' stroke-width='0.7' opacity='0.22'%3E%3Cpath d='M30 0l30 30-30 30L0 30z'/%3E%3Cpath d='M30 12l18 18-18 18-18-18z'/%3E%3Ccircle cx='30' cy='30' r='5'/%3E%3C/g%3E%3C/svg%3E");
 }
 

@@ -1,13 +1,17 @@
 /* Service Worker — الإعجاز العلمي في القرآن الكريم
    استراتيجية: precache للأصول الأساسية + cache-first مع تحديث في الخلفية */
-const CACHE = 'quran-miracles-v8';
+const CACHE = 'quran-miracles-v11';
 const ASSETS = [
   './',
   './index.html',
   './style.css',
   './data.js',
   './app.js',
+  './tilawah.mp3',
   './manifest.webmanifest',
+  './icon-192.png',
+  './icon-512.png',
+  './icon-maskable.png',
   './icon-192.svg',
   './icon-512.svg',
   './icon-maskable.svg'
