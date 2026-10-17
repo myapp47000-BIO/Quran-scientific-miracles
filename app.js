@@ -1097,17 +1097,21 @@
     document.addEventListener('visibilitychange', unlockHandler);
     unlockBound = true;
   }
+  let promptEl = null;
+  function audioPromptShow() { if (promptEl && audioEnabled && getTilawah().paused) promptEl.hidden = false; }
+  function audioPromptHide() { if (promptEl) promptEl.hidden = true; }
   function playTilawah() {
     if (!audioEnabled) return;
     const el = getTilawah();
     const p = el.play();
-    if (p && p.then) p.then(() => removeUnlock()).catch(() => {});
+    if (p && p.then) p.then(() => { removeUnlock(); audioPromptHide(); }).catch(() => {});
   }
   function stopAmbient() {
     audioEnabled = false;
     saveJSON(LS_AUDIO, false);
     audioSetUI(false);
     removeUnlock();
+    audioPromptHide();
     if (tilawahEl) { try { tilawahEl.pause(); } catch (e) {} }
   }
   function startAmbient() {
@@ -1124,11 +1128,15 @@
   function initAmbient() {
     const btn = $('#audioBtn');
     if (!btn) return;
+    promptEl = $('#audioPrompt');
+    if (promptEl) promptEl.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); startAmbient(); audioPromptHide(); });
     getTilawah();
     audioSetUI(audioEnabled);
     if (audioEnabled) {
       playTilawah();   // محاولة تلقائية فورية (قد يمنعها المتصفح)
       bindUnlock();    // ثم تبدأ تلقائيًا عند أول تفاعل/تمرير من المستخدم
+      setTimeout(audioPromptShow, 1500);
+      window.addEventListener('load', () => setTimeout(audioPromptShow, 300), { once: true });
     }
     btn.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); toggleAmbient(); });
   }

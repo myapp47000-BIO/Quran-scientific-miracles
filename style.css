@@ -701,6 +701,17 @@ html[dir="rtl"] .side-menu__panel { transform: translateX(-100%); inset-inline-e
 @keyframes splashPop { from { opacity: 0; transform: translateY(10px) scale(.92); } to { opacity: 1; transform: none; } }
 @keyframes splashLoad { 0% { left: -40%; } 100% { left: 100%; } }
 
+/* زر تشغيل التلاوة (يظهر إذا مُنع التشغيل التلقائي) */
+.audio-prompt {
+  position: fixed; inset-block-end: 22px; inset-inline: 0; margin-inline: auto; width: max-content; z-index: 85;
+  background: linear-gradient(180deg, var(--gold-1), var(--gold-2)); color: #0d1d2f;
+  font: 800 15px/1 var(--font-ar); padding: 12px 24px; border: 0; border-radius: 999px;
+  box-shadow: var(--shadow); cursor: pointer; animation: promptPop .3s ease, promptFloat 1.9s ease-in-out .3s infinite;
+}
+.audio-prompt:hover { filter: brightness(1.05); }
+@keyframes promptPop { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+@keyframes promptFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+
 /* ------------------------------ Motion prefs / Print ------------------------------ */
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }
