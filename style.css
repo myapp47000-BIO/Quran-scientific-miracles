@@ -712,6 +712,45 @@ html[dir="rtl"] .side-menu__panel { transform: translateX(-100%); inset-inline-e
 @keyframes promptPop { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes promptFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 
+/* ------------------------------ قسم التلاوة ------------------------------ */
+.surah-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 14px; }
+.surah-chip {
+  display: flex; align-items: center; gap: 10px; text-align: start;
+  border: 1px solid var(--border-soft); background: var(--surface); color: var(--text);
+  padding: 11px 13px; border-radius: var(--radius-sm); cursor: pointer; font-family: inherit;
+  transition: transform .16s, box-shadow .2s, border-color .16s;
+}
+.surah-chip:hover { transform: translateY(-2px); border-color: var(--gold-2); box-shadow: var(--shadow); }
+.surah-chip.active { border-color: transparent; background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); color: #16130a; }
+.surah-chip.disabled { opacity: .4; cursor: not-allowed; }
+.surah-chip.disabled:hover { transform: none; box-shadow: none; border-color: var(--border-soft); }
+.surah-chip .s-num {
+  flex: 0 0 auto; width: 30px; height: 30px; display: grid; place-items: center;
+  border-radius: 50%; background: var(--surface-3); color: var(--gold-1);
+  font: 800 12.5px/1 var(--font-ar); border: 1px solid var(--border-soft);
+}
+.surah-chip.active .s-num { background: rgba(22,19,10,.15); color: #16130a; border-color: transparent; }
+.surah-chip .s-name { font-weight: 700; font-size: 14.5px; }
+
+/* شريط التشغيل السفلي */
+.player-bar {
+  position: fixed; inset-block-end: 0; inset-inline: 0; z-index: 85; display: flex; align-items: center;
+  gap: 12px; padding: 10px 16px; background: var(--surface-2); border-block-start: 1px solid var(--border-soft);
+  box-shadow: 0 -6px 20px rgba(0,0,0,.28); backdrop-filter: blur(10px); animation: promptPop .3s ease;
+}
+.player-bar .pb-info { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1 1 auto; }
+.player-bar .pb-ico { font-size: 20px; }
+.player-bar .pb-title { font-weight: 700; font-size: 14.5px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.player-bar .pb-actions { display: flex; gap: 8px; flex: 0 0 auto; }
+.player-bar .pb-btn {
+  width: 42px; height: 42px; display: grid; place-items: center; cursor: pointer;
+  border: 1px solid var(--border-soft); border-radius: 50%; background: var(--surface); color: var(--text);
+  font-family: inherit; font-size: 16px; transition: all .16s;
+}
+.player-bar .pb-btn:hover { border-color: var(--gold-2); transform: translateY(-1px); }
+.player-bar #pbToggle { background: linear-gradient(135deg, var(--gold-1), var(--gold-2)); color: #16130a; border-color: transparent; }
+body.has-player { padding-block-end: 76px; }
+
 /* ------------------------------ Motion prefs / Print ------------------------------ */
 @media (prefers-reduced-motion: reduce) {
   * { animation: none !important; transition: none !important; }

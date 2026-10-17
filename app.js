@@ -18,6 +18,8 @@
     termCat: 'all',
     termSearch: '',
     scholarKind: 'all',
+    reciter: 'yassen',
+    nowPlaying: null,
     favorites: new Set(loadJSON(LS_FAV, [])),
     quiz: { order: [], index: 0, score: 0, answered: false }
   };
@@ -73,6 +75,7 @@
   const TABS = [
     { id: 'home', label: '🏠 الرئيسية' },
     { id: 'miracies', label: '📖 آيات الإعجاز' },
+    { id: 'recitation', label: '🎧 التلاوة' },
     { id: 'categories', label: '🗂️ المجالات' },
     { id: 'similar', label: '🕸️ المتشابهات' },
     { id: 'terms', label: '📚 فهرس المصطلحات' },
@@ -171,6 +174,7 @@
     switch (state.tab) {
       case 'home': return viewHome(view);
       case 'miracies': return viewMiracles(view);
+      case 'recitation': return viewRecitation(view);
       case 'categories': return viewCategories(view);
       case 'similar': return viewSimilar(view);
       case 'terms': return viewTerms(view);
@@ -1076,7 +1080,6 @@
       tilawahEl.preload = 'none';
       document.body.appendChild(tilawahEl);
     }
-    tilawahEl.loop = true;
     tilawahEl.volume = 0.6;
     return tilawahEl;
   }
@@ -1139,6 +1142,102 @@
       window.addEventListener('load', () => setTimeout(audioPromptShow, 300), { once: true });
     }
     btn.addEventListener('click', (ev) => { ev.preventDefault(); ev.stopPropagation(); toggleAmbient(); });
+
+    const t = getTilawah();
+    t.addEventListener('play', () => { audioSetUI(true); updatePlayerBar(); });
+    t.addEventListener('pause', () => updatePlayerBar());
+    t.addEventListener('ended', () => updatePlayerBar());
+    const tg = $('#pbToggle');
+    if (tg) tg.addEventListener('click', (ev) => { ev.preventDefault(); togglePlayback(); });
+    const stp = $('#pbStop');
+    if (stp) stp.addEventListener('click', (ev) => { ev.preventDefault(); stopPlayback(); });
+    updatePlayerBar();
+  }
+
+  /* ------------------------------ قسم التلاوة ------------------------------ */
+  function surahName(n) { const s = JUZ_AMMA.find((x) => x.n === n); return s ? s.name : ('سورة ' + n); }
+  function updatePlayerBar() {
+    const bar = $('#playerBar');
+    if (!bar) return;
+    const np = state.nowPlaying;
+    if (!np) { bar.hidden = true; document.body.classList.remove('has-player'); return; }
+    bar.hidden = false;
+    document.body.classList.add('has-player');
+    const r = RECITERS.find((x) => x.id === np.rid);
+    const title = $('#pbTitle');
+    if (title) title.textContent = 'سورة ' + surahName(np.n) + (r ? ' — ' + r.name : '');
+    const elm = getTilawah();
+    const tog = $('#pbToggle');
+    if (tog) {
+      tog.textContent = elm.paused ? '▶' : '⏸';
+      tog.setAttribute('aria-label', elm.paused ? 'تشغيل' : 'إيقاف مؤقت');
+    }
+  }
+  function playSurah(rid, n) {
+    const r = RECITERS.find((x) => x.id === rid);
+    if (!r || !r.surahs.includes(n)) { toast('هذه السورة غير متاحة لهذا المقرئ'); return; }
+    const elm = getTilawah();
+    elm.loop = false;
+    elm.src = r.server + String(n).padStart(3, '0') + '.mp3';
+    audioEnabled = true; saveJSON(LS_AUDIO, true); audioSetUI(true);
+    const p = elm.play();
+    if (p && p.then) {
+      p.then(() => { removeUnlock(); audioPromptHide(); updatePlayerBar(); })
+        .catch(() => { toast('تعذّر التشغيل — تحقق من الاتصال بالإنترنت'); });
+    }
+    state.nowPlaying = { rid, n };
+    updatePlayerBar();
+    if (state.tab === 'recitation') renderView();
+  }
+  function togglePlayback() {
+    const elm = getTilawah();
+    if (elm.paused) { const p = elm.play(); if (p && p.then) p.catch(() => {}); }
+    else elm.pause();
+    setTimeout(updatePlayerBar, 0);
+  }
+  function stopPlayback() {
+    try { getTilawah().pause(); } catch (e) {}
+    state.nowPlaying = null;
+    audioEnabled = false; saveJSON(LS_AUDIO, false); audioSetUI(false);
+    updatePlayerBar();
+    if (state.tab === 'recitation') renderView();
+  }
+  function viewRecitation(view) {
+    view.appendChild(el('h3', { class: 'section-title' }, '🎧 التلاوة — سور جزء عمّ'));
+    view.appendChild(el('p', { class: 'section-desc' }, 'اختر المقرئ ثم اضغط على السورة للاستماع. الصوت يُبَثّ مباشرةً من شبكة mp3quran (يتطلب اتصالًا بالإنترنت).'));
+
+    const chips = el('div', { class: 'filters' });
+    RECITERS.forEach((r) => {
+      chips.appendChild(el('button', {
+        class: 'chip' + (state.reciter === r.id ? ' active' : ''),
+        type: 'button',
+        onclick: () => { state.reciter = r.id; renderView(); }
+      }, `${esc(r.name)} · ${esc(r.rewaya)}`));
+    });
+    view.appendChild(chips);
+
+    const rec = RECITERS.find((r) => r.id === state.reciter) || RECITERS[0];
+    const grid = el('div', { class: 'surah-grid' });
+    let available = 0;
+    JUZ_AMMA.forEach(({ n, name }) => {
+      const avail = rec.surahs.includes(n);
+      if (avail) available++;
+      const active = state.nowPlaying && state.nowPlaying.rid === rec.id && state.nowPlaying.n === n;
+      const btn = el('button', {
+        class: 'surah-chip' + (active ? ' active' : '') + (avail ? '' : ' disabled'),
+        type: 'button',
+        title: avail ? ('استماع إلى سورة ' + name) : 'غير متاحة لهذا المقرئ'
+      }, `<span class="s-num">${n}</span><span class="s-name">${esc(name)}</span>`);
+      if (avail) btn.addEventListener('click', () => playSurah(rec.id, n));
+      else btn.setAttribute('disabled', '');
+      grid.appendChild(btn);
+    });
+    view.appendChild(grid);
+
+    if (available < JUZ_AMMA.length) {
+      view.appendChild(el('p', { class: 'muted', style: 'margin-top:10px' },
+        `ملاحظة: المقرئ «${esc(rec.name)}» يتوفّر له ${available} سورة من جزء عمّ فقط في هذا المصدر.`));
+    }
   }
 
   function init() {

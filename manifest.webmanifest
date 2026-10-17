@@ -33,6 +33,12 @@
   ],
   "shortcuts": [
     {
+      "name": "التلاوة",
+      "short_name": "التلاوة",
+      "url": "./index.html#recitation",
+      "description": "استمع إلى جزء عمّ بصوت نخبة من المقرئين"
+    },
+    {
       "name": "الآيات",
       "short_name": "الآيات",
       "url": "./index.html#miracies",
